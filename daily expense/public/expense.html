@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head><title>Expense Tracker</title></head>
+<body>
+  <h2>Daily Expense Tracker</h2>
+  <form id="expense-form">
+    <input type="number" id="amount" placeholder="Amount" required><br>
+    <input type="text" id="description" placeholder="Description"><br>
+    <select id="category" required>
+      <option value="">Select Category</option>
+      <option value="Food">Food</option>
+      <option value="Petrol">Petrol</option>
+      <option value="Salary">Salary</option>
+    </select><br>
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <h3>All Expenses</h3>
+  <ul id="expenses-list"></ul>
+
+  <script>
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
+      window.location.href = '/login.html';
+    }
+
+    async function loadExpenses() {
+      const res = await fetch(`/api/expenses?userId=${userId}`);
+      const data = await res.json();
+      const list = document.getElementById('expenses-list');
+      list.innerHTML = '';
+      data.forEach(exp => {
+        const li = document.createElement('li');
+        li.textContent = `${exp.amount} - ${exp.description} (${exp.category})`;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('expense-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = document.getElementById('amount').value;
+      const description = document.getElementById('description').value;
+      const category = document.getElementById('category').value;
+
+      await fetch('/api/expenses/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, description, category })
+      });
+
+      document.getElementById('expense-form').reset();
+      loadExpenses();
+    });
+
+    loadExpenses();
+  </script>
+</body>
+</html>
